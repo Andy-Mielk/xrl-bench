@@ -32,6 +32,8 @@ def image_input_test(environment, method, metric, k=50):
     explainer = Explainer(method=method, state=dataset.observations, action=dataset.actions,
                           model=environment.model)
     importance = explainer.explain()
+    # for breakOut env, state: (S-A pair size=3776, 3, 84, 84), action: (S-A pair size=3776, 4), importance: (3776, 3, 84, 84, 4)
+    print(importance)
     evaluator = Evaluator(metric=metric, environment=environment)
     if metric == "RIS":
         performance = evaluator.evaluate(dataset.observations, dataset.actions, importance, explainer=explainer)
@@ -41,13 +43,17 @@ def image_input_test(environment, method, metric, k=50):
 
 
 if __name__ == "__main__":
-    # Tabular数据测试
-    environment = "lunarLander"
-    method = "tabularShap"
-    metric = "AIM"
-    performance = tabular_input_test(environment, method, metric, k=3)
+    # # Tabular数据测试
+    # # it worked, 加载的是预训练好的数据和模型
+    # environment = "lunarLander"
+    # method = "integratedGradient"   # 'tabularShap', 'sarfa', 'perturbationSaliency', 'tabularLime', 'deepShap', 'gradientShap', 'integratedGradient', 
+    # metric = "AIM"
+    # performance = tabular_input_test(environment, method, metric, k=3)
+    # print(performance)
 
+    
     # Image数据测试
+    # it worked
     environment = "breakOut"
     method = "imageDeepShap"
     metric = "imageAIM"

@@ -78,6 +78,7 @@ class TabularSHAP:
         TODO: Build a good ensemble tree student model to fit the policy model.
         """
         model = lightgbm.LGBMClassifier()
+        model.fit(self.X_enc, self.y)   # 加这一行才不会报错：TypeError: The passed model is not callable and cannot be analyzed directly with the given masker! Model: LGBMClassifier()
         self.explainer = shap.Explainer(model)
 
 
@@ -91,7 +92,7 @@ class TabularSHAP:
             X_enc.loc[~X_enc[self.categorical_names[i]].isin(encoder.classes_), self.categorical_names[i]] = 'unknow'
             encoder.classes_ = np.append(encoder.classes_, 'unknow')
             X_enc[self.categorical_names[i]] = encoder.transform(X_enc[self.categorical_names[i]])
-        shap_values = self.explainer(X_enc)
+        shap_values = self.explainer(X_enc) # 实际运行在这里耗时
         shap_values.display_data = X.values
         return shap_values
 

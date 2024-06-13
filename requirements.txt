@@ -13,3 +13,6 @@ torchvision==0.15.2
 tqdm==4.65.0
 grpcio==1.60.0
 psutil==5.9.8
+
+gymnasium[accept-rom-license]
+gymnasium[atari]
