@@ -74,13 +74,19 @@ class TabularSHAP:
         return encoders
 
     def _fit_model(self):
-        """
-        TODO: Build a good ensemble tree student model to fit the policy model.
-        """
-        model = lightgbm.LGBMClassifier()
-        model.fit(self.X_enc, self.y)   # 加这一行才不会报错：TypeError: The passed model is not callable and cannot be analyzed directly with the given masker! Model: LGBMClassifier()
+        X_train, X_test, y_train, y_test = train_test_split(self.X_enc, self.y, test_size=0.1, random_state=42)
+        if len(np.unique(self.y)) > 2:
+            task_obj = 'multiclass'
+            task_metric = 'multi_logloss'
+        else:
+            task_obj = 'binary'
+            task_metric = 'binary_logloss'
+        model = lightgbm.LGBMClassifier(objective=task_obj, num_leaves=31, learning_rate=0.05, n_estimators=1000)
+        model.fit(X_train, y_train, eval_set=[(X_test, y_test)], eval_metric=task_metric,
+                  early_stopping_rounds=10, categorical_feature=self.categorical_names, verbose=True)
+        self.predictions = model.predict(self.X_enc, num_iteration=model.best_iteration_)
+        self.report = classification_report(self.y, self.predictions)
         self.explainer = shap.Explainer(model)
-
 
     def _generate_shap_values(self, X):
         X_enc = X.copy()
@@ -92,7 +98,7 @@ class TabularSHAP:
             X_enc.loc[~X_enc[self.categorical_names[i]].isin(encoder.classes_), self.categorical_names[i]] = 'unknow'
             encoder.classes_ = np.append(encoder.classes_, 'unknow')
             X_enc[self.categorical_names[i]] = encoder.transform(X_enc[self.categorical_names[i]])
-        shap_values = self.explainer(X_enc) # 实际运行在这里耗时
+        shap_values = self.explainer(X_enc)
         shap_values.display_data = X.values
         return shap_values
 
@@ -120,7 +126,6 @@ class TabularSHAP:
         X_enc = X.copy()
         shap_values = self._generate_shap_values(X_enc)
         return shap_values
-
 
 
 
