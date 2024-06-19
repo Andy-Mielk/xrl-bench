@@ -32,8 +32,24 @@ def image_input_test(environment, method, metric, k=50):
     explainer = Explainer(method=method, state=dataset.observations, action=dataset.actions,
                           model=environment.model)
     importance = explainer.explain()
-    # for breakOut env, state: (S-A pair size=3776, 3, 84, 84), action: (S-A pair size=3776, 4), importance: (3776, 3, 84, 84, 4)
-    print(importance)
+    # for breakOut env, dataset's state: (S-A pair size=3776, 3, 84, 84), action: (S-A pair size=3776, 4), importance: (3776, 3, 84, 84, 4)
+    # for pong env, dataset's state: (S-A pair size=4000, 3, 84, 84), action: (S-A pair size=4000, 6), importance: (4000, 3, 84, 84, 6)
+    # print(importance)
+
+    # Sample observations from the dataset
+    sample_observations = dataset.observations[:5]  # (5, 3, 84, 84) 0-255
+
+    # Get the corresponding importance for the sampled observations
+    sample_importance = importance[:5]  # (5, 3, 84, 84, 6) -5～5?
+
+    # Print the sampled observations and their importance
+    for obs, imp in zip(sample_observations, sample_importance):
+        print("Observation:")
+        print(obs)
+        print("Importance:")
+        print(imp)
+        print("--------------------")
+    
     evaluator = Evaluator(metric=metric, environment=environment)
     if metric == "RIS":
         performance = evaluator.evaluate(dataset.observations, dataset.actions, importance, explainer=explainer)
@@ -54,8 +70,8 @@ if __name__ == "__main__":
     
     # Image数据测试
     # it worked
-    environment = "breakOut"
-    method = "imageDeepShap"
+    environment = "pong"    # 'breakOut', 'pong'
+    method = "imagePerturbationSaliency"    # 'imagePerturbationSaliency', 'imageSarfa', 'imageDeepShap', 'imageGradientShap', 'imageIntegratedGradient'
     metric = "imageAIM"
     performance = image_input_test(environment, method, metric, k=50)
 

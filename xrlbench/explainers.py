@@ -44,7 +44,7 @@ class Explainer:
                 f"This explainer is not supported at the moment. Explainers supported are {list(valid_explainers.keys())}"
             )
         self.method = method
-        self.state = state/255 if method.find("image") != -1 else state
+        self.state = state/255 if method.find("image") != -1 else state # 如果是图像数据，归一化
         self.action = action
         self.explainer = valid_explainers[method](X=state, y=action, **kwargs)
 
