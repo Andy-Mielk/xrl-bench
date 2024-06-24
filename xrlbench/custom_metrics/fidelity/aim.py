@@ -108,6 +108,7 @@ class ImageAIM:
         y = y.values if isinstance(y, pd.Series) else y
         feature_weights = feature_weights.values if isinstance(feature_weights, shap.Explanation) else feature_weights
         if len(np.array(feature_weights).shape) == 5:
+            # shap值: (n_samples, 3, 84, 84, n_actions) -> (n_samples, 84, 84) 选取相应的action，在通道维度求和
             feature_weights = [np.sum(feature_weights[i, :, :, :, int(y[i])], axis=0) for i in range(len(feature_weights))]
         elif len(np.array(feature_weights).shape) == 4:
             feature_weights = [np.sum(feature_weights[i, :, :, :], axis=0) for i in range(len(feature_weights))]

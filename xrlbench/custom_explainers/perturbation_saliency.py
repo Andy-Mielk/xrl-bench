@@ -136,6 +136,8 @@ class PerturbationSaliency:
 class ImagePerturbationSaliency:
     def __init__(self, X, y, model):
         """
+        通过在图像的每个像素位置添加扰动，计算原始模型输出和扰动后输出之间的差异，得出显著性分数。
+        计算显著性分数时并没有使用到 y (也就是动作 action)
         Class for calculating image perturbation saliency scores.
 
         Parameters:
@@ -213,6 +215,8 @@ class ImagePerturbationSaliency:
 
     def _calculate_saliency(self, feature):
         """
+        通过在图像的每个像素位置添加扰动，计算原始模型输出和扰动后输出之间的差异，得出显著性分数。
+
         Calculate the saliency scores for a given feature.
 
         Parameters:
@@ -236,11 +240,13 @@ class ImagePerturbationSaliency:
                 with torch.no_grad():
                     Q_perturbed = self.model(torch.from_numpy(feature_noised).float().unsqueeze(0).to(self.device))
                 Q_perturbed = np.squeeze(Q_perturbed.cpu().numpy())
+                # 计算原始输出 Q 和扰动后输出 Q_perturbed 之间的欧氏距离，将结果存储在显著性分数矩阵中。
                 scores[i, j] = np.sqrt(np.sum(np.square(Q - Q_perturbed)))
         return scores
 
     def explain(self, X=None, batch_size=1):
         """
+        explain 方法遍历输入图像，分批计算每张图像的显著性分数，并返回整个批次的显著性分数矩阵。
         Compute the saliency scores for the input images.
 
         Parameters:
