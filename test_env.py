@@ -11,6 +11,8 @@ import torchvision.transforms as T
 测试环境提供的预训练模型的性能。
 发现很差，需要重新训练。
 执行以下代码，重新训练模型。
+在这里手动停止：
+Episode 143903 Average Score: 6.67
 """
 
 def preprocess_state(state):
