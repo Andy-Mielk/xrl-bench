@@ -1,0 +1,85 @@
+diff --git a/dqn_atari.py b/dqn_atari.py
+index bfdb2a7..30bfa26 100644
+--- a/dqn_atari.py
++++ b/dqn_atari.py
+@@ -179,57 +179,6 @@ def evaluate(
+     return episodic_returns
+ 
+ 
+-# 评估函数，修改了episode结束的判定条件和episodic_return的计算方式，简化了环境创建方式
+-# 注意，与此同时，修改了QNetwork的__init__方法，最后一行改成了nn.Linear(512, env.action_space.n)，而不是原来的多环境的nn.Linear(512, env.single_action_space.n)
+-# 还修改了采用确定性策略（deterministic policy）而不是 epsilon-greedy 策略。这是因为评估的目的是测试模型的性能，而不是进一步探索环境。确定性策略通常选择当前 Q 值最高的动作，以确保模型表现出其最优策略。
+-# 这个代码感觉跑起来很慢，不知道为什么，而且performance不好，可能是因为没有使用vectorized envs？
+-def evaluate1(
+-    model_path: str,
+-    make_env: Callable,
+-    env_id: str,
+-    eval_episodes: int,
+-    run_name: str,
+-    Model: torch.nn.Module,
+-    device: torch.device = torch.device("cpu"),
+-    epsilon: float = 0.05,
+-    capture_video: bool = True,
+-):
+-    env = make_env(env_id, 0, 0, capture_video, run_name)()
+-    # envs = gym.vector.SyncVectorEnv([make_env(env_id, 0, 0, capture_video, run_name)])
+-    model = Model(env).to(device)
+-    model.load_state_dict(torch.load(model_path, map_location=device))
+-    print(f"loaded model from {model_path}")
+-    model.eval()
+-
+-    obs, _ = env.reset()    # obs: [4, 84, 84]，即4个84*84的图像, 4是由于make_env中FrameStack(env, 4)的作用, 但是类别不是ndarray而是 <class 'gymnasium.wrappers.frame_stack.LazyFrames'>
+-    episodic_returns = []
+-    while len(episodic_returns) < eval_episodes:
+-        # obs_tensor = torch.Tensor(np.array([obs])).to(device)
+-        # obs_tensor = torch.as_tensor(np.array(obs)).to(device)
+-        # obs_tensor = torch.Tensor([obs]).to(device) # 与上一行等价，obs_tensor: [1, 4, 84, 84]
+-        # q_values = model(torch.as_tensor(np.array([obs])).to(device))
+-        # q_values = model(torch.as_tensor(obs).unsqueeze(0).to(device))
+-        
+-        # 在obs前面添加一维，作为 batch size
+-        obs_batch = np.expand_dims(obs, axis=0)
+-        obs_tensor = torch.Tensor(obs_batch).to(device)
+-        q_values = model(obs_tensor)
+-        action = torch.argmax(q_values, dim=1).cpu().numpy()[0]  # action: numpy.int64, 0-3
+-
+-        next_obs, _, _, _, info = env.step(action)
+-
+-        if 'episode' in info:
+-            episodic_returns.append(info['episode']['r'])
+-            print(f"eval_episode={len(episodic_returns)}, episodic_return={info['episode']['r']}")
+-            obs, _ = env.reset()
+-        else:
+-            obs = next_obs
+-    
+-    env.close()
+-    return episodic_returns
+-
+-
+-
+ if __name__ == "__main__":
+     import stable_baselines3 as sb3
+ 
+@@ -260,20 +209,9 @@ poetry run pip install "stable_baselines3==2.0.0a1" "gymnasium[atari,accept-rom-
+             Model=QNetwork,
+             device=device,
+             epsilon=0.05,
+-            capture_video=True,
++            capture_video=False,
+         )
+-    # for i in range(10):
+-    #     evaluate0(
+-    #         model_path,
+-    #         make_env,
+-    #         args.env_id,
+-    #         eval_episodes=1,
+-    #         run_name=f"{run_name}-eval",
+-    #         Model=QNetwork,
+-    #         device=device,
+-    #         epsilon=0.05,
+-    #         capture_video=False,
+-    #     )
++    print(episodic_returns)
+ 
+ 
+ 
